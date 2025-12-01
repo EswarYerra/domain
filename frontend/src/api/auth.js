@@ -2,7 +2,11 @@
 // 🔐 AUTH API — DIRECT LOGIN (No OTP)
 // =====================================================================
 
-const BASE_URL = "http://127.0.0.1:8000/api/auth";
+// Backend URL from env; fallback to localhost
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
+const BASE_URL = `${API_BASE_URL}/api/auth`;
 
 // Generic POST request with JSON body
 async function securePost(url, body = {}) {
@@ -34,7 +38,6 @@ export function storeAuthData(data) {
   if (data.access) localStorage.setItem("access", data.access);
   if (data.refresh) localStorage.setItem("refresh", data.refresh);
 
-  // Store user details
   localStorage.setItem(
     "user",
     JSON.stringify({
@@ -49,7 +52,6 @@ export function storeAuthData(data) {
     })
   );
 
-  // Store permissions separately if needed
   if (data.permissions) {
     localStorage.setItem("permissions", JSON.stringify(data.permissions));
   }
