@@ -9,7 +9,7 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,my-backends-xr0s.onrender.com").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -35,11 +35,13 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # ✅ must be first
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
@@ -85,7 +87,14 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
-CORS_ALLOW_METHODS = ["*"]
+CORS_ALLOW_METHODS =[
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
@@ -124,3 +133,4 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "janamahi2010@gmail.com"
 
 OTP_EXPIRY_MINUTES = 5
+#CORS_ALLOW_ALL_ORIGINS = True
