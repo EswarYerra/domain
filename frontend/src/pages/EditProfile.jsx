@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "./EditProfilePage.css";
+import { API_URL } from "../config/api";
 
 // ==============================
 //  EDIT PROFILE PAGE
@@ -48,7 +49,7 @@ export default function EditProfilePage() {
       if (cached) return cached;
 
       const res = await fetch(
-        `http://127.0.0.1:8000/api/auth/messages/${type}/${code}/`
+        `${API_URL}/api/auth/messages/${type}/${code}/`
       );
       if (res.ok) {
         const data = await res.json();
@@ -110,7 +111,7 @@ export default function EditProfilePage() {
           });
         } else {
           const res = await fetch(
-            "http://127.0.0.1:8000/api/auth/messages/"
+            `${API_URL}/api/auth/messages/`
           );
           if (res.ok) {
             const data = await res.json();
@@ -144,14 +145,14 @@ export default function EditProfilePage() {
     const loadAll = async () => {
       try {
         const userRes = await axios.get(
-          "http://127.0.0.1:8000/api/auth/profile/",
+          `${API_URL}/api/auth/profile/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setUser(userRes.data);
 
         // address
         const addrRes = await axios.get(
-          "http://127.0.0.1:8000/api/addresses/",
+          `${API_URL}/api/addresses/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -162,10 +163,10 @@ export default function EditProfilePage() {
 
         // departments + roles
         const deptRes = await axios.get(
-          "http://127.0.0.1:8000/api/auth/departments/"
+          `${API_URL}/api/auth/departments/`
         );
         const rolesRes = await axios.get(
-          "http://127.0.0.1:8000/api/auth/roles/"
+          `${API_URL}/api/auth/roles/`
         );
 
         setDepartments(deptRes.data || []);
@@ -379,14 +380,14 @@ export default function EditProfilePage() {
       if (payload.role)
         payload.role = Number(payload.role);
 
-      await axios.put("http://127.0.0.1:8000/api/auth/profile/", payload, {
+      await axios.put(`${API_URL}/api/auth/profile/`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       // address
       const addrUrl = address.id
-        ? `http://127.0.0.1:8000/api/addresses/${address.id}/`
-        : "http://127.0.0.1:8000/api/addresses/";
+        ? `${API_URL}/api/addresses/${address.id}/`
+        : `${API_URL}/api/addresses/`;
 
       await axios({
         method: address.id ? "put" : "post",
@@ -439,7 +440,7 @@ export default function EditProfilePage() {
   // ------------------ LOGOUT ------------------
   const handleLogout = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/auth/messages/");
+      const res = await fetch(`${API_URL}/api/auth/messages/`);
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem("user_error", JSON.stringify(data.user_error || []));

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./RegisterPage.css";
+import { API_URL } from "../config/api";
 
 // =========================
 // 🔹 Helper: Fetch message by code from cache
@@ -53,7 +54,7 @@ export default function RegisterForm() {
       try {
         if (localStorage.getItem("user_error")) return;
 
-        const res = await fetch("http://127.0.0.1:8000/api/auth/messages/");
+        const res = await fetch(`${API_URL}/api/auth/messages/`);
         const data = await res.json();
 
         localStorage.setItem("user_error", JSON.stringify(data.user_error || []));
@@ -109,7 +110,7 @@ export default function RegisterForm() {
     if (name === "username") {
       try {
         const res = await fetch(
-          `http://127.0.0.1:8000/api/auth/check-username/?username=${encodeURIComponent(
+          `${API_URL}/api/auth/check-username/?username=${encodeURIComponent(
             trimmed
           )}`
         );
@@ -128,7 +129,7 @@ export default function RegisterForm() {
     if (name === "email") {
       try {
         const res = await fetch(
-          `http://127.0.0.1:8000/api/auth/check-email/?email=${encodeURIComponent(
+          `${API_URL}/api/auth/check-email/?email=${encodeURIComponent(
             trimmed
           )}`
         );
@@ -204,7 +205,7 @@ export default function RegisterForm() {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/auth/register/", {
+      const res = await fetch(`${API_URL}/api/auth/register/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

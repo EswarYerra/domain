@@ -1,6 +1,7 @@
 import axios from "axios";
+import { API_URL } from "./config/api";
 
-axios.defaults.baseURL = "http://127.0.0.1:8000";
+axios.defaults.baseURL = API_URL;
 
 // Set token if exists
 const token = localStorage.getItem("access");

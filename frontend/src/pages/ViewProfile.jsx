@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./ViewProfilePage.css";
 import axios from "axios";
+import { API_URL } from "../config/api";
 
 function ViewProfile() {
   const [user, setUser] = useState({});
@@ -31,8 +32,8 @@ function ViewProfile() {
     const fetchData = async () => {
       try {
         const userUrl = isViewingOtherUser
-          ? `http://127.0.0.1:8000/api/auth/admin/users/${userId}/`
-          : `http://127.0.0.1:8000/api/auth/profile/`;
+          ? `${API_URL}/api/auth/admin/users/${userId}/`
+          : `${API_URL}/api/auth/profile/`;
 
         const userRes = await axios.get(userUrl, {
           headers: { Authorization: `Bearer ${token}` },
@@ -41,7 +42,7 @@ function ViewProfile() {
 
         if (!isViewingOtherUser) {
           const addrRes = await axios.get(
-            "http://127.0.0.1:8000/api/addresses/",
+            `${API_URL}/api/addresses/`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           if (Array.isArray(addrRes.data) && addrRes.data.length > 0) {
@@ -49,8 +50,8 @@ function ViewProfile() {
           }
         }
 
-        const deptRes = await axios.get("http://127.0.0.1:8000/api/auth/departments/");
-        const rolesRes = await axios.get("http://127.0.0.1:8000/api/auth/roles/");
+        const deptRes = await axios.get(`${API_URL}/api/auth/departments/`);
+        const rolesRes = await axios.get(`${API_URL}/api/auth/roles/`);
 
         setDepartments(deptRes.data);
         setRoles(rolesRes.data);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
+import { API_URL } from "../config/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export default function Dashboard() {
   const loadDashboard = async () => {
     try {
       // Fetch Profile
-      const resProfile = await fetch("http://127.0.0.1:8000/api/auth/profile/", {
+      const resProfile = await fetch("/api/auth/profile/", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -30,7 +31,7 @@ export default function Dashboard() {
       setProfile(dataProfile);
 
       // Check Address
-      const resAddr = await fetch("http://127.0.0.1:8000/api/addresses/check/", {
+      const resAddr = await fetch(`${API_URL}/api/addresses/check/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

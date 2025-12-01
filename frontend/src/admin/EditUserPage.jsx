@@ -3,6 +3,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./EditUserPage.css";
+import { API_URL } from "../config/api";
 
 /**
  * EditUserPage
@@ -146,7 +147,7 @@ function EditUserPage() {
   // -------------------------
   const loadUserData = useCallback(async () => {
     try {
-      const res = await axios.get(`http://127.0.0.1:8000/api/auth/admin/users/${id}/`, {
+      const res = await axios.get(`${API_URL}/api/auth/admin/users/${id}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser({
@@ -155,7 +156,7 @@ function EditUserPage() {
         email_original: res.data.email,
       });
 
-      const addrRes = await axios.get(`http://127.0.0.1:8000/api/addresses/?user=${id}`, {
+      const addrRes = await axios.get(`${API_URL}/api/addresses/?user=${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -190,11 +191,11 @@ function EditUserPage() {
   const loadDropdowns = useCallback(async () => {
     try {
       const deptRes = await axios.get(
-        "http://127.0.0.1:8000/api/auth/departments/"
+        `${API_URL}/api/auth/departments/`
       );
       setDepartments(Array.isArray(deptRes.data) ? deptRes.data : []);
       const rolesRes = await axios.get(
-        "http://127.0.0.1:8000/api/auth/roles/"
+        `${API_URL}/api/auth/roles/`
       );
       setRoles(Array.isArray(rolesRes.data) ? rolesRes.data : []);
     } catch {
@@ -369,7 +370,7 @@ function EditUserPage() {
 
     try {
       const res = await axios.get(
-        "http://127.0.0.1:8000/api/auth/check-username/",
+        `${API_URL}/api/auth/check-username/`,
         {
           params: { username: usernameVal },
           headers: { Authorization: `Bearer ${token}` },
@@ -403,7 +404,7 @@ function EditUserPage() {
 
     try {
       const res = await axios.get(
-        "http://127.0.0.1:8000/api/auth/check-email/",
+        `${API_URL}/api/auth/check-email/`,
         {
           params: { email: emailVal },
           headers: { Authorization: `Bearer ${token}` },
@@ -511,7 +512,7 @@ function EditUserPage() {
     try {
       // PUT user
       await axios.put(
-        `http://127.0.0.1:8000/api/auth/admin/users/${id}/`,
+        `${API_URL}/api/auth/admin/users/${id}/`,
         {
           ...user,
           department: user.department ? Number(user.department) : null,
@@ -522,8 +523,8 @@ function EditUserPage() {
 
       // Save address
       const addrUrl = address.id
-        ? `http://127.0.0.1:8000/api/addresses/${address.id}/`
-        : "http://127.0.0.1:8000/api/addresses/";
+        ? `${API_URL}/api/addresses/${address.id}/`
+        : `${API_URL}/api/addresses/`;
       await axios({
         method: address.id ? "put" : "post",
         url: addrUrl,
