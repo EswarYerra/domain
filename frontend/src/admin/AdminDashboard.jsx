@@ -3,6 +3,8 @@ import axios from "axios";
 import "../layouts/AdminLayout.css";
 import "./AdminDashboard.css";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config/api";
+
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -40,7 +42,7 @@ export default function AdminDashboard() {
 
   // Axios instance
   const API = axios.create({
-    baseURL: "http://127.0.0.1:8000/api/",
+    baseURL: `${API_URL}/api/`,
   });
   useEffect(() => {
   if (permissionMsg) {
@@ -68,7 +70,7 @@ export default function AdminDashboard() {
         try {
           const refreshToken = localStorage.getItem("refresh");
           const res = await axios.post(
-            "http://127.0.0.1:8000/api/auth/token/refresh/",
+            `${API_URL}/api/auth/token/refresh/`,
             { refresh: refreshToken }
           );
 

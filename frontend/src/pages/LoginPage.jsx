@@ -1,24 +1,25 @@
-// =====================================================================
-// 🔐 LOGIN PAGE (Direct Login - No OTP)
-// =====================================================================
-
+// frontend/src/pages/LoginPage.jsx
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { loginInit, storeAuthData } from "../api/auth";
 import "./LoginPage.css";
+import { API_URL } from "../config/api";
 
 const FALLBACK_CODES = {
   LOGIN_FAILED: "EL001",
+  LOGIN_SUCCESS: "IL001",
   SERVER_ERROR: "EA010",
 };
 
-export default function LoginPage() {
+const PERMISSIONS_KEY = "permissions";
+
+function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
-  const [type, setType] = useState(""); // error or success
+  const [messageType, setMessageType] = useState(""); // error | success
+  const navigate = useNavigate();
 
   const [msgTables, setMsgTables] = useState({
     user_error: {},
@@ -26,40 +27,31 @@ export default function LoginPage() {
     user_validation: {},
   });
 
-  const navigate = useNavigate();
-
-  // ============================================================
-  // Normalize Message Tables
-  // ============================================================
-  const normalize = (arr, type) => {
+  // Normalizing message tables
+  const normalize = (maybeArr, type) => {
+    if (!maybeArr) return {};
     const map = {};
-    if (!Array.isArray(arr)) return map;
-
-    arr.forEach((item) => {
-      if (!item) return;
-
-      if (type === "error" && item.error_code)
-        map[item.error_code.toUpperCase()] = item.error_message;
-
-      if (type === "info" && item.information_code)
-        map[item.information_code.toUpperCase()] = item.information_text;
-
-      if (type === "validation" && item.validation_code)
-        map[item.validation_code.toUpperCase()] = item.validation_message;
-    });
-
+    if (Array.isArray(maybeArr)) {
+      for (const item of maybeArr) {
+        if (!item) continue;
+        if (type === "error" && item.error_code)
+          map[item.error_code.toUpperCase()] = item.error_message || "";
+        if (type === "info" && item.information_code)
+          map[item.information_code.toUpperCase()] = item.information_text || "";
+        if (type === "validation" && item.validation_code)
+          map[item.validation_code.toUpperCase()] =
+            item.validation_message || "";
+      }
+    }
     return map;
   };
 
-  // ============================================================
-  // Load Message Tables From localStorage
-  // ============================================================
+  // Load cached message tables
   useEffect(() => {
     try {
       const e = JSON.parse(localStorage.getItem("user_error") || "[]");
       const i = JSON.parse(localStorage.getItem("user_information") || "[]");
       const v = JSON.parse(localStorage.getItem("user_validation") || "[]");
-
       setMsgTables({
         user_error: normalize(e, "error"),
         user_information: normalize(i, "info"),
@@ -71,100 +63,122 @@ export default function LoginPage() {
   }, []);
 
   const getErrorText = (code) =>
-    msgTables.user_error[(code || "").toUpperCase()] ||
-    "Invalid credentials.";
+    msgTables.user_error[(code || "").toUpperCase()] || "";
+  const getInfoText = (code) =>
+    msgTables.user_information[(code || "").toUpperCase()] || "";
 
-  // ============================================================
-  // REDIRECT HANDLER
-  // ============================================================
-  const handleRedirect = async (data) => {
-  const roleId = Number(data?.role_id);
-
-  // Admin redirect
-  if (data?.is_admin || (roleId && roleId !== 2)) {
-    navigate("/admin/dashboard", { replace: true });
-    return;
-  }
-
-  // Normal user → check address using cookie-based auth
-  try {
-    const res = await fetch("http://127.0.0.1:8000/api/addresses/check/", {
-      method: "GET",
-      credentials: "include",   // 🔥 send cookie with request
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const addrData = await res.json().catch(() => ({}));
-
-    if (res.ok && addrData?.has_address) {
-      navigate("/dashboard", { replace: true });
-    } else {
-      navigate("/addresses", { replace: true });
-    }
-  } catch {
-    navigate("/addresses", { replace: true });
-  }
-};
-
-
-  // ============================================================
+  // ---------------------------
   // LOGIN HANDLER
-  // ============================================================
+  // ---------------------------
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage("");
-    setType("");
-
-    if (!username.trim() || !password.trim()) {
-      setMessage("Username and password are required.");
-      setType("error");
-      return;
-    }
+    setMessageType("");
 
     try {
-      const result = await loginInit(username, password);
-      const { ok, data } = result;
+      const res = await fetch(`${API_URL}/api/auth/login/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-      if (!ok) {
+      const data = await res.json().catch(() => ({}));
 
-const code = data?.code || FALLBACK_CODES.LOGIN_FAILED;
+      // Invalid credentials
+      if (!res.ok || !data.access) {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        localStorage.removeItem(PERMISSIONS_KEY);
 
-const msg =
-  data?.message ||                    // backend message
-  getErrorText(code) ||               // DB message table
-  "Invalid credentials.";             // last fallback
+        const code =
+          (data.code && String(data.code)) || FALLBACK_CODES.LOGIN_FAILED;
+        const text =
+          data.message || getErrorText(code) || "Invalid credentials.";
 
-setMessage(msg);
-
-        setType("error");
+        setMessage(text);
+        setMessageType("error");
         return;
       }
 
-      // Store tokens + user info
-      storeAuthData(data);
+      // Success message
+      const infoCode =
+        (data.code && String(data.code)) || FALLBACK_CODES.LOGIN_SUCCESS;
+      setMessage(
+        data.message || getInfoText(infoCode) || "Login successful."
+      );
+      setMessageType("success");
 
-      setMessage("Login successful!");
-      setType("success");
+      // Store tokens
+      localStorage.setItem("access", data.access);
+      if (data.refresh) localStorage.setItem("refresh", data.refresh);
 
-      setTimeout(() => handleRedirect(data), 600);
+      // Store permissions
+ localStorage.setItem(
+  "user",
+  JSON.stringify({
+    username: data.username,
+    email: data.email,
+    is_admin: data.is_admin,
+    role_id: data.role_id,
+    role_name: data.role_name,
+    permissions: data.permissions || []
+  })
+);
 
-    } catch (err) {
-      setMessage(getErrorText(FALLBACK_CODES.SERVER_ERROR));
-      setType("error");
+
+      const token = data.access;
+
+      // -------------------------------------
+      // ROLE-BASED REDIRECT
+      // -------------------------------------
+      setTimeout(async () => {
+        const roleId = Number(data.role_id); // always parse safely
+
+        // ADMIN = any role except 2
+        if (!isNaN(roleId) && roleId !== 2) {
+          navigate("/admin/dashboard", { replace: true });
+          return;
+        }
+
+        // USER = role_id === 2 → normal dashboard/address flow
+        try {
+          const addrRes = await fetch(
+            `${API_URL}/api/addresses/check/`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          const addrData = await addrRes.json().catch(() => ({}));
+
+          if (addrRes.ok && addrData.has_address) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/addresses", { replace: true });
+          }
+        } catch {
+          navigate("/addresses", { replace: true });
+        }
+      }, 700);
+    } catch {
+      const fallback =
+        getErrorText(FALLBACK_CODES.SERVER_ERROR) ||
+        "Server error. Please try again.";
+      setMessage(fallback);
+      setMessageType("error");
     }
   };
 
-  // ============================================================
-  // UI Rendering
-  // ============================================================
   return (
     <div className="auth-wrapper">
       <div className="login-container">
         <h2>Login</h2>
 
-        <form onSubmit={handleLogin} className="login-form">
+        <form onSubmit={handleLogin} className="login-form" noValidate>
           <input
             className="login-input"
             type="text"
@@ -192,19 +206,31 @@ setMessage(msg);
           </div>
 
           {message && (
-            <p className={type === "error" ? "error-text" : "success-text"}>
+            <p
+              className={`login-message ${
+                messageType === "error" ? "error-text" : "success-text"
+              }`}
+            >
               {message}
             </p>
           )}
 
-          <button className="login-button">Login</button>
+          <button className="login-button" type="submit">
+            Login
+          </button>
         </form>
 
         <div className="login-links">
-          <p><Link to="/forgot-password">Forgot password?</Link></p>
-          <p>Don’t have an account? <Link to="/register">Register</Link></p>
+          <p>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </p>
+          <p>
+            Don’t have an account? <Link to="/register">Register</Link>
+          </p>
         </div>
       </div>
     </div>
   );
 }
+
+export default LoginPage;

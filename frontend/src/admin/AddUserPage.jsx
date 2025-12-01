@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./AddUserPage.css";
+import { API_URL } from "../config/api";
 
 /**
  * Merged AddUserPage
@@ -81,7 +82,7 @@ function AddUserPage() {
       const cached = localStorage.getItem(`${type}_${code}`);
       if (cached) return cached;
       // fallback single-code API
-      const url = `http://127.0.0.1:8000/api/auth/messages/${type}/${code}/`;
+      const url = `${API_URL}/api/auth/messages/${type}/${code}/`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -139,7 +140,7 @@ function AddUserPage() {
         }
 
         // Best-effort fetch to populate cache for first-time installs
-        const res = await fetch("http://127.0.0.1:8000/api/auth/messages/");
+        const res = await fetch(`${API_URL}/api/auth/messages/`);
         if (res.ok) {
           const data = await res.json();
           const ue = Array.isArray(data.user_error) ? data.user_error : [];
@@ -165,8 +166,8 @@ function AddUserPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const d = await axios.get("http://127.0.0.1:8000/api/auth/departments/");
-        const r = await axios.get("http://127.0.0.1:8000/api/auth/roles/");
+        const d = await axios.get(`${API_URL}/api/auth/departments/`);
+        const r = await axios.get(`${API_URL}/api/auth/roles/`);
         setDepartments(Array.isArray(d.data) ? d.data : []);
         setRoles(Array.isArray(r.data) ? r.data : []);
       } catch {
@@ -296,7 +297,7 @@ else if ((name === "first_name" || name === "last_name") && !NAME_RE.test(v)) {
   const checkUsernameUnique = async (usernameVal) => {
     if (!usernameVal || !USERNAME_RE.test(usernameVal)) return;
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/auth/check-username/", {
+      const res = await axios.get(`${API_URL}/api/auth/check-username/`, {
         params: { username: usernameVal },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -315,7 +316,7 @@ else if ((name === "first_name" || name === "last_name") && !NAME_RE.test(v)) {
   const checkEmailUnique = async (emailVal) => {
     if (!emailVal || !EMAIL_RE.test(emailVal)) return;
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/auth/check-email/", {
+      const res = await axios.get(`${API_URL}/api/auth/check-email/`, {
         params: { email: emailVal },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -400,7 +401,7 @@ else if ((name === "first_name" || name === "last_name") && !NAME_RE.test(v)) {
     try {
       // create user
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/auth/admin/users/",
+        `${API_URL}/api/auth/admin/users/`,
         { ...user, department: user.department ? Number(user.department) : null, role: user.role ? Number(user.role) : null },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
@@ -412,7 +413,7 @@ else if ((name === "first_name" || name === "last_name") && !NAME_RE.test(v)) {
       const hasAddress = Object.values(address).some((v) => v && String(v).trim());
       if (hasAddress && userId) {
         await axios.post(
-          "http://127.0.0.1:8000/api/addresses/",
+          `${API_URL}/api/addresses/`,
           { ...address, user: userId },
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
