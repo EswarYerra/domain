@@ -23,7 +23,7 @@ export default function Dashboard() {
   const loadDashboard = async () => {
     try {
       // Fetch Profile
-      const resProfile = await fetch("/api/auth/profile/", {
+      const resProfile = await fetch(`${API_URL}/api/auth/profile/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
