@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     "apps.password_reset",
     "apps.viewprofile",
     "apps.change_password",
-    "apps.subscriptions",
+    #"apps.subscriptions",
 ]
 
 MIDDLEWARE = [
